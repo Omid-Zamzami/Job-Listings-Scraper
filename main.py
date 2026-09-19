@@ -1,13 +1,14 @@
 import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
 
-URL = "https://realpython.github.io/fake-jobs/"
+BASE_URL = "https://realpython.github.io/fake-jobs/"
 
 
 def fetch_html():
     try:
-    
-        response = requests.get(url=URL, timeout=10)
+        response = requests.get(url=BASE_URL, timeout=10)
 
         response.raise_for_status()
 
@@ -27,8 +28,43 @@ def fetch_html():
         return ""
 
 
+def parse_jobs(html):
+    soup = BeautifulSoup(html, "html.parser")
+
+    jobs = []
+
+    job_cards = soup.select(".card-content")
+
+    for job in job_cards:
+        title_element = job.select_one(".title.is-5")
+        company_element = job.select_one(".subtitle.is-6.company")
+        location_element = job.select_one(".location")
+        link_element = job.find("a", string="Apply")
+
+        title = title_element.get_text(strip=True) if title_element else ""
+        company = company_element.get_text(strip=True) if company_element else ""
+        location = location_element.get_text(strip=True) if location_element else ""
+        href = link_element.get("href") if link_element else ""
+
+        url = urljoin(BASE_URL, href) if href else ""
+
+        jobs.append(
+            {
+                "title": title,
+                "company": company,
+                "location": location,
+                "url": url
+            }
+        )
+
+    return jobs
+
+
 def main():
-    print(fetch_html())
+    data = fetch_html()
+
+    jobs = parse_jobs(data)
+    print(jobs)
 
 
 if __name__ == "__main__":
