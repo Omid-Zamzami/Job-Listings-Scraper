@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+import csv
 
 
 BASE_URL = "https://realpython.github.io/fake-jobs/"
@@ -60,11 +61,26 @@ def parse_jobs(html):
     return jobs
 
 
+def save_jobs_to_csv(jobs):
+    with open("jobs.csv", "w", newline="", encoding="utf-8") as file:
+        writer = csv.DictWriter(
+            file,
+            fieldnames=["title", "company", "location", "url"]
+        )
+
+        writer.writeheader()
+        writer.writerows(jobs)
+
+
 def main():
     data = fetch_html()
 
+    if not data:
+        return
+
     jobs = parse_jobs(data)
-    print(jobs)
+
+    save_jobs_to_csv(jobs)
 
 
 if __name__ == "__main__":
